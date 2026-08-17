@@ -8,32 +8,40 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.UUID;
-import nz.fox.craig.e2e.config.E2eConfig;
+import nz.fox.craig.e2e.client.AuthenticationClient;
 import nz.fox.craig.e2e.model.CustomerResponse;
 import nz.fox.craig.e2e.model.LoginResponse;
+import nz.fox.craig.e2e.state.ScenarioState;
 
 public class AuthenticationSteps {
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final AuthenticationClient authenticationClient;
+    private final ScenarioState state;
+    private final ObjectMapper objectMapper;
 
     private HttpResponse<String> registrationResponse;
     private HttpResponse<String> loginResponse;
 
     private String email;
     private String password;
-    private UUID customerId;
+
+    public AuthenticationSteps(
+            AuthenticationClient authenticationClient,
+            ScenarioState state) {
+
+        this.authenticationClient = authenticationClient;
+        this.state = state;
+        this.objectMapper = new ObjectMapper();
+    }
 
     @Given("I am an unauthenticated customer")
     public void iAmAnUnauthenticatedCustomer() {
-        email = "e2e-registration-"
-                + System.currentTimeMillis()
-                + "@example.com";
+
+        email =
+                "e2e-registration-"
+                        + System.currentTimeMillis()
+                        + "@example.com";
 
         password = "password123";
     }
@@ -41,32 +49,14 @@ public class AuthenticationSteps {
     @When("I register with valid customer details")
     public void iRegisterWithValidCustomerDetails() throws Exception {
 
-        String requestBody =
-                """
-                {
-                    "firstName": "E2E",
-                    "lastName": "Customer",
-                    "preferredName": "Test",
-                    "email": "%s",
-                    "address": "1 Test Street",
-                    "password": "%s"
-                }
-                """
-                .formatted(email, password);
-
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(
-                                E2eConfig.CUSTOMER_SERVICE_URL
-                                        + "/api/customers"))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                        .build();
-
         registrationResponse =
-                httpClient.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofString());
+                authenticationClient.register(
+                        "E2E",
+                        "Customer",
+                        "Test",
+                        email,
+                        "1 Test Street",
+                        password);
     }
 
     @Then("my registration should be successful")
@@ -105,81 +95,40 @@ public class AuthenticationSteps {
                 "ACTIVE",
                 customerResponse.status());
 
-        customerId = customerResponse.id();
+        state.setCustomerId(customerResponse.id());
     }
 
     @Given("I am a registered customer")
     public void iAmARegisteredCustomer() throws Exception {
-
-        email = "e2e-login-"
-                + System.currentTimeMillis()
-                + "@example.com";
-
+    
+        email =
+                "e2e-login-"
+                        + System.currentTimeMillis()
+                        + "@example.com";
+    
         password = "password123";
-
-        String requestBody =
-                """
-                {
-                    "firstName": "E2E",
-                    "lastName": "Login",
-                    "preferredName": "Test",
-                    "email": "%s",
-                    "address": "1 Test Street",
-                    "password": "%s"
-                }
-                """
-                .formatted(email, password);
-
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(
-                                E2eConfig.CUSTOMER_SERVICE_URL
-                                        + "/api/customers"))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                        .build();
-
-        registrationResponse =
-                httpClient.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofString());
-
-        assertEquals(201, registrationResponse.statusCode());
-
-        CustomerResponse customerResponse =
-                objectMapper.readValue(
-                        registrationResponse.body(),
-                        CustomerResponse.class);
-
-        customerId = customerResponse.id();
+    
+        CustomerResponse customer =
+                authenticationClient.registerCustomer(
+                        "E2E",
+                        "Login",
+                        "Test",
+                        email,
+                        "1 Test Street",
+                        password);
+    
+        assertNotNull(customer.id());
+    
+        state.setCustomerId(customer.id());
     }
 
     @When("I log in with valid credentials")
     public void iLogInWithValidCredentials() throws Exception {
 
-        String requestBody =
-                """
-                {
-                    "email": "%s",
-                    "password": "%s"
-                }
-                """
-                .formatted(email, password);
-
-        HttpRequest request =
-            HttpRequest.newBuilder()
-                    .uri(URI.create(
-                            E2eConfig.AUTH_SERVICE_URL
-                                    + "/api/auth/login"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                    .build();
-
         loginResponse =
-                httpClient.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofString());
-        
+                authenticationClient.login(
+                        email,
+                        password);
     }
 
     @Then("my login should be successful")
@@ -196,7 +145,7 @@ public class AuthenticationSteps {
         assertFalse(response.token().isBlank());
 
         assertEquals(
-                customerId,
+                state.getCustomerId(),
                 response.customerId());
 
         assertEquals(
@@ -206,5 +155,7 @@ public class AuthenticationSteps {
         assertEquals(
                 "Test",
                 response.preferredName());
+
+        state.setAuthToken(response.token());
     }
 }
