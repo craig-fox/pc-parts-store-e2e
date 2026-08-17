@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nz.fox.craig.e2e.config.E2eConfig;
 import nz.fox.craig.e2e.model.ProductResponse;
+import nz.fox.craig.e2e.state.ScenarioState;
 
 public class ProductSteps {
 
@@ -28,8 +29,14 @@ public class ProductSteps {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private ProductResponse selectedProduct;
     private HttpResponse<String> productDetailsResponse;
+
+
+    private final ScenarioState state;
+
+    public ProductSteps(ScenarioState state) {
+        this.state = state;
+    }
 
     @When("I request the available products")
     public void iRequestTheAvailableProducts() throws Exception {
@@ -95,8 +102,7 @@ public class ProductSteps {
                         new TypeReference<List<ProductResponse>>() {});
 
         assertFalse(products.isEmpty());
-
-        selectedProduct = products.get(0);
+        state.setSelectedProduct(products.get(0));
     }
 
     @When("I request the product details")
@@ -107,7 +113,7 @@ public class ProductSteps {
                         .uri(URI.create(
                                 E2eConfig.PRODUCT_SERVICE_URL
                                         + "/api/products/"
-                                        + selectedProduct.id()))
+                                        + state.getSelectedProduct().id()))
                         .GET()
                         .build();
 
@@ -128,16 +134,16 @@ public class ProductSteps {
                         ProductResponse.class);
 
         assertNotNull(product.id());
-        assertEquals(selectedProduct.id(), product.id());
+        assertEquals(state.getSelectedProduct().id(), product.id());
 
-        assertEquals(selectedProduct.sku(), product.sku());
-        assertEquals(selectedProduct.name(), product.name());
-        assertEquals(selectedProduct.description(), product.description());
-        assertEquals(selectedProduct.brand(), product.brand());
-        assertEquals(selectedProduct.category(), product.category());
-        assertEquals(selectedProduct.price(), product.price());
-        assertEquals(selectedProduct.stockQuantity(), product.stockQuantity());
-        assertEquals(selectedProduct.weightKg(), product.weightKg());
-        assertEquals(selectedProduct.imageUrl(), product.imageUrl());
+        assertEquals(state.getSelectedProduct().sku(), product.sku());
+        assertEquals(state.getSelectedProduct().name(), product.name());
+        assertEquals(state.getSelectedProduct().description(), product.description());
+        assertEquals(state.getSelectedProduct().brand(), product.brand());
+        assertEquals(state.getSelectedProduct().category(), product.category());
+        assertEquals(state.getSelectedProduct().price(), product.price());
+        assertEquals(state.getSelectedProduct().stockQuantity(), product.stockQuantity());
+        assertEquals(state.getSelectedProduct().weightKg(), product.weightKg());
+        assertEquals(state.getSelectedProduct().imageUrl(), product.imageUrl());
     }
 }
