@@ -19,9 +19,10 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
 
         <cucumber.version>7.29.0</cucumber.version>
-        <junit.version>5.13.4</junit.version>
+        <junit.platform.version>1.13.4</junit.platform.version>
+
         <maven.compiler.plugin.version>3.14.0</maven.compiler.plugin.version>
-        <maven.surefire.version>3.5.3</maven.surefire.version>
+        <maven.surefire.version>3.5.4</maven.surefire.version>
     </properties>
 
     <dependencies>
@@ -41,19 +42,18 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>${junit.platform.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-          <groupId>org.junit.platform</groupId>
-          <artifactId>junit-platform-suite</artifactId>
-          <version>1.13.4</version>
-          <scope>test</scope>
-      </dependency>
- 
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.18.0</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
@@ -73,6 +73,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <cucumber.junit-platform.naming-strategy>long</cucumber.junit-platform.naming-strategy>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
 
         </plugins>
