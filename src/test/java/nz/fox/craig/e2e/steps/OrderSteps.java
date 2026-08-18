@@ -2,14 +2,10 @@ package nz.fox.craig.e2e.steps;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.net.http.HttpResponse;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -17,7 +13,6 @@ import nz.fox.craig.e2e.client.OrderClient;
 import nz.fox.craig.e2e.client.ProductClient;
 import nz.fox.craig.e2e.model.OrderItemResponse;
 import nz.fox.craig.e2e.model.OrderResponse;
-import nz.fox.craig.e2e.model.ProductResponse;
 import nz.fox.craig.e2e.state.ScenarioState;
 
 public class OrderSteps {
