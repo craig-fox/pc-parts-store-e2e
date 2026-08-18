@@ -158,4 +158,43 @@ public class AuthenticationSteps {
 
         state.setAuthToken(response.token());
     }
+
+    @Given("I am a registered and authenticated customer")
+    public void iAmARegisteredAndAuthenticatedCustomer() throws Exception {
+
+        String email =
+                "e2e-order-"
+                        + System.currentTimeMillis()
+                        + "@example.com";
+
+        String password = "password123";
+
+        CustomerResponse customer =
+                authenticationClient.registerCustomer(
+                        "E2E",
+                        "Order",
+                        "Test",
+                        email,
+                        "1 Test Street",
+                        password);
+
+        assertNotNull(customer.id());
+
+        state.setCustomerId(customer.id());
+
+        LoginResponse login =
+                authenticationClient.loginCustomer(
+                        email,
+                        password);
+
+        assertNotNull(login.token());
+        assertFalse(login.token().isBlank());
+
+        assertEquals(
+                customer.id(),
+                login.customerId());
+
+        state.setAuthToken(login.token());
+    }
+
 }
