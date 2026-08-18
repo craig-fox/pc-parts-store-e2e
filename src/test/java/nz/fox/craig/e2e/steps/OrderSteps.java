@@ -102,7 +102,7 @@ public class OrderSteps {
     public void iHavePlacedAnOrder() throws Exception {
 
         state.setSelectedProduct(
-                productClient.getAvailableProduct());
+                productClient.getE2eProduct());
 
         orderResponse = createOrder();
 

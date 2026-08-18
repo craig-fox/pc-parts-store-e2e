@@ -11,6 +11,8 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.net.http.HttpResponse;
+import java.util.UUID;
+
 import nz.fox.craig.e2e.client.AuthenticationClient;
 import nz.fox.craig.e2e.model.CustomerResponse;
 import nz.fox.craig.e2e.model.LoginResponse;
@@ -41,11 +43,7 @@ public class AuthenticationSteps {
     @Given("I am an unauthenticated customer")
     public void iAmAnUnauthenticatedCustomer() {
 
-        email =
-                "e2e-registration-"
-                        + System.currentTimeMillis()
-                        + "@example.com";
-
+        email = "e2e-registration-" + UUID.randomUUID() + "@example.com";
         password = "password123";
     }
 
@@ -164,19 +162,42 @@ public class AuthenticationSteps {
 
     @Given("I am a registered and authenticated customer")
     public void iAmARegisteredAndAuthenticatedCustomer() throws Exception {
-
-        String email =
+    
+        email =
                 "e2e-order-"
-                        + System.currentTimeMillis()
+                        + UUID.randomUUID()
                         + "@example.com";
+    
+        password = "password123";
+    
+        CustomerResponse customer =
+                registerCustomer(email, password, "Test");
+    
+        LoginResponse login =
+                authenticationClient.loginCustomer(
+                        email,
+                        password);
+    
+        assertNotNull(login.token());
+        assertFalse(login.token().isBlank());
+    
+        assertEquals(
+                customer.id(),
+                login.customerId());
+    
+        state.setAuthToken(login.token());
+    }
 
-        String password = "password123";
+    private CustomerResponse registerCustomer(
+        String email,
+        String password,
+        String preferredName) throws Exception {
 
         CustomerResponse customer =
                 authenticationClient.registerCustomer(
                         "E2E",
                         "Order",
-                        "Test",
+                        preferredName,
                         email,
                         "1 Test Street",
                         password);
@@ -185,19 +206,7 @@ public class AuthenticationSteps {
 
         state.setCustomerId(customer.id());
 
-        LoginResponse login =
-                authenticationClient.loginCustomer(
-                        email,
-                        password);
-
-        assertNotNull(login.token());
-        assertFalse(login.token().isBlank());
-
-        assertEquals(
-                customer.id(),
-                login.customerId());
-
-        state.setAuthToken(login.token());
+        return customer;
     }
 
 }

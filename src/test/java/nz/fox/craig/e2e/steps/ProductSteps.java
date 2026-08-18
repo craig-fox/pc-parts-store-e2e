@@ -68,14 +68,8 @@ public class ProductSteps {
     @Given("a product is available")
     public void aProductIsAvailable() throws Exception {
     
-        List<ProductResponse> products =
-                productClient.getAvailableProducts();
-    
-        assertFalse(
-                products.isEmpty(),
-                "No products with available stock");
-    
-        state.setSelectedProduct(products.get(0));
+        state.setSelectedProduct(
+                productClient.getE2eProduct());
     }
 
     @When("I request the product details")
