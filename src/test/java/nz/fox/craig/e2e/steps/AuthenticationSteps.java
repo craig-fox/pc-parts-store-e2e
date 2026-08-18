@@ -35,7 +35,7 @@ public class AuthenticationSteps {
         this.authenticationClient = authenticationClient;
         this.state = state;
         this.objectMapper =new ObjectMapper()
-                .registerModule(new JavaTimeModule());
+                .registerModule(new JavaTimeModule());        
     }
 
     @Given("I am an unauthenticated customer")
