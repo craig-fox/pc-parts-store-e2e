@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -32,7 +34,8 @@ public class AuthenticationSteps {
 
         this.authenticationClient = authenticationClient;
         this.state = state;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper =new ObjectMapper()
+                .registerModule(new JavaTimeModule());
     }
 
     @Given("I am an unauthenticated customer")

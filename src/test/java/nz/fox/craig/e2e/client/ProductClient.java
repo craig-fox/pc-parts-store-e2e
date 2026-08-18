@@ -55,11 +55,29 @@ public class ProductClient {
     }
 
     public List<ProductResponse> getAvailableProducts() throws Exception {
+
         HttpResponse<String> rawData = getProducts();
+    
         List<ProductResponse> products =
                 objectMapper.readValue(
                         rawData.body(),
                         new TypeReference<List<ProductResponse>>() {});
-        return products;
+    
+        return products.stream()
+                .filter(product -> product.stockQuantity() != null)
+                .filter(product -> product.stockQuantity() > 0)
+                .toList();
+    }
+
+    public ProductResponse getAvailableProduct() throws Exception {
+
+        List<ProductResponse> products = getAvailableProducts();
+    
+        if (products.isEmpty()) {
+            throw new IllegalStateException(
+                    "No products with available stock");
+        }
+    
+        return products.get(0);
     }
 }

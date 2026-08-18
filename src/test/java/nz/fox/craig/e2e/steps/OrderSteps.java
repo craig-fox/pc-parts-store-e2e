@@ -2,6 +2,7 @@ package nz.fox.craig.e2e.steps;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -46,16 +47,7 @@ public class OrderSteps {
 
     @When("I place an order for the product")
     public void iPlaceAnOrderForTheProduct() throws Exception {
-
-        orderResponse =
-                orderClient.createOrder(
-                        state.getAuthToken(),
-                        state.getSelectedProduct().id().toString(),
-                        1,
-                        "1 Test Street",
-                        "Auckland",
-                        "1010",
-                        "New Zealand");
+        orderResponse = createOrder();
     }
      
 
@@ -113,29 +105,21 @@ public class OrderSteps {
 
     @Given("I have placed an order")
     public void iHavePlacedAnOrder() throws Exception {
-    
-        List<ProductResponse> products = productClient.getAvailableProducts();
-        state.setSelectedProduct(products.get(0));
-    
-        orderResponse =
-                orderClient.createOrder(
-                        state.getAuthToken(),
-                        state.getSelectedProduct().id().toString(),
-                        1,
-                        "1 Test Street",
-                        "Auckland",
-                        "1010",
-                        "New Zealand");
-    
+
+        state.setSelectedProduct(
+                productClient.getAvailableProduct());
+
+        orderResponse = createOrder();
+
         assertEquals(201, orderResponse.statusCode());
-    
+
         OrderResponse order =
                 objectMapper.readValue(
                         orderResponse.body(),
                         OrderResponse.class);
-    
+
         assertNotNull(order.id());
-    
+
         state.setOrderId(order.id());
     }
 
@@ -255,6 +239,18 @@ public class OrderSteps {
         assertEquals(
                 1,
                 item.quantity());
+    }
+
+    private HttpResponse<String> createOrder() throws Exception {
+
+        return orderClient.createOrder(
+                state.getAuthToken(),
+                state.getSelectedProduct().id().toString(),
+                1,
+                "1 Test Street",
+                "Auckland",
+                "1010",
+                "New Zealand");
     }
 
 
