@@ -8,22 +8,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nz.fox.craig.e2e.config.E2eConfig;
+import nz.fox.craig.e2e.client.ProductClient;
 import nz.fox.craig.e2e.model.ProductResponse;
 import nz.fox.craig.e2e.state.ScenarioState;
 
 public class ProductSteps {
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ProductClient productClient;
+    private final ScenarioState state;
+
+    public ProductSteps(
+            ProductClient productClient,
+            ScenarioState state) {
+
+        this.productClient = productClient;
+        this.state = state;
+    }
 
     private HttpResponse<String> productResponse;
 
@@ -31,30 +37,10 @@ public class ProductSteps {
 
     private HttpResponse<String> productDetailsResponse;
 
-
-    private final ScenarioState state;
-
-    public ProductSteps(ScenarioState state) {
-        this.state = state;
-    }
-
     @When("I request the available products")
     public void iRequestTheAvailableProducts() throws Exception {
 
-       
-
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(
-                                E2eConfig.PRODUCT_SERVICE_URL
-                                        + "/api/products"))
-                        .GET()
-                        .build();
-
-        productResponse =
-                httpClient.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofString());
+        productResponse = productClient.getProducts();
     }
 
     @Then("the products should be returned successfully")
@@ -81,18 +67,8 @@ public class ProductSteps {
     @Given("a product is available")
     public void aProductIsAvailable() throws Exception {
 
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(
-                                E2eConfig.PRODUCT_SERVICE_URL
-                                        + "/api/products"))
-                        .GET()
-                        .build();
-
         HttpResponse<String> response =
-                httpClient.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofString());
+                productClient.getProducts();
 
         assertEquals(200, response.statusCode());
 
@@ -101,26 +77,24 @@ public class ProductSteps {
                         response.body(),
                         new TypeReference<List<ProductResponse>>() {});
 
-        assertFalse(products.isEmpty());
-        state.setSelectedProduct(products.get(0));
+        ProductResponse product =
+                products.stream()
+                        .filter(p -> p.stockQuantity() != null)
+                        .filter(p -> p.stockQuantity() > 0)
+                        .findFirst()
+                        .orElseThrow(
+                                () -> new AssertionError(
+                                        "No products with available stock"));
+
+        state.setSelectedProduct(product);
     }
 
     @When("I request the product details")
     public void iRequestTheProductDetails() throws Exception {
-
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(
-                                E2eConfig.PRODUCT_SERVICE_URL
-                                        + "/api/products/"
-                                        + state.getSelectedProduct().id()))
-                        .GET()
-                        .build();
-
+    
         productDetailsResponse =
-                httpClient.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofString());
+                productClient.getProduct(
+                        state.getSelectedProduct().id().toString());
     }
 
     @Then("the product details should be returned successfully")
