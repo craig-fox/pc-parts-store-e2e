@@ -59,6 +59,7 @@ public class ProductSteps {
         for (ProductResponse product : products) {
             assertNotNull(product.id());
             assertNotNull(product.sku());
+            assertNotNull(product.name());
             assertFalse(product.name().isBlank());
             assertNotNull(product.price());
         }
@@ -66,27 +67,15 @@ public class ProductSteps {
 
     @Given("a product is available")
     public void aProductIsAvailable() throws Exception {
-
-        HttpResponse<String> response =
-                productClient.getProducts();
-
-        assertEquals(200, response.statusCode());
-
+    
         List<ProductResponse> products =
-                objectMapper.readValue(
-                        response.body(),
-                        new TypeReference<List<ProductResponse>>() {});
-
-        ProductResponse product =
-                products.stream()
-                        .filter(p -> p.stockQuantity() != null)
-                        .filter(p -> p.stockQuantity() > 0)
-                        .findFirst()
-                        .orElseThrow(
-                                () -> new AssertionError(
-                                        "No products with available stock"));
-
-        state.setSelectedProduct(product);
+                productClient.getAvailableProducts();
+    
+        assertFalse(
+                products.isEmpty(),
+                "No products with available stock");
+    
+        state.setSelectedProduct(products.get(0));
     }
 
     @When("I request the product details")
