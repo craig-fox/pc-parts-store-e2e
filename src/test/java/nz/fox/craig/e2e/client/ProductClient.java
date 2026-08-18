@@ -15,6 +15,8 @@ import nz.fox.craig.e2e.model.ProductResponse;
 
 public class ProductClient {
 
+    private static final String E2E_PRODUCT_SKU = "CPU-AMD-9800X3D";
+
     private final HttpClient httpClient;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -69,15 +71,17 @@ public class ProductClient {
                 .toList();
     }
 
-    public ProductResponse getAvailableProduct() throws Exception {
+    public ProductResponse getE2eProduct() throws Exception {
 
         List<ProductResponse> products = getAvailableProducts();
     
-        if (products.isEmpty()) {
-            throw new IllegalStateException(
-                    "No products with available stock");
-        }
-    
-        return products.get(0);
+        return products.stream()
+                .filter(product -> E2E_PRODUCT_SKU.equals(product.sku()))
+                .findFirst()
+                .orElseThrow(
+                        () ->
+                                new IllegalStateException(
+                                        "E2E product '%s' is not available"
+                                                .formatted(E2E_PRODUCT_SKU)));
     }
 }
