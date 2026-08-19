@@ -16,19 +16,25 @@ git clone https://github.com/craig-fox/pc-parts-store-api.git
 
 The API project should be available alongside this project.
 
-From the root of the `pc-parts-store-api` project, start the application services with:
+Docker and Docker Compose must be installed and available.
 
-```bash
-docker compose up -d --build
-```
-
-This starts the services and supporting infrastructure required by the E2E tests.
-
-Once the services are running, return to this project.
+The E2E project includes a `run-e2e.sh` script that starts the application environment and runs the E2E test suite. This is the recommended way to run the complete suite.
 
 ## Running the tests
 
 From the root of `pc-parts-store-e2e`, run:
+
+```bash
+./run-e2e.sh
+```
+
+The script starts the required application services and supporting infrastructure, waits for the services to become available, and then runs the complete Cucumber suite.
+
+The script is the preferred entry point for running the E2E tests because it provides a consistent environment from which to execute the suite.
+
+### Running the Maven suite directly
+
+If the application services are already running, the Cucumber suite can also be executed directly:
 
 ```bash
 mvn clean test
@@ -36,7 +42,39 @@ mvn clean test
 
 All Cucumber scenarios will be discovered and executed.
 
-The tests expect the application services to already be running. The E2E project does not start or stop the application services itself.
+Running Maven directly does not start or stop the application services.
+
+### Running smoke tests
+
+A small subset of scenarios is tagged with `@smoke` to provide a fast check of the application's critical path.
+
+Run the smoke suite with:
+
+```bash
+mvn clean test -Dcucumber.filter.tags="@smoke"
+```
+
+The smoke scenarios cover the core journey through the application:
+
+- Customer login
+- Product browsing
+- Product details
+- Order placement
+
+### Running individual tagged scenarios
+
+Negative-path scenarios have their own tags and can be run selectively. For example:
+
+```bash
+mvn clean test -Dcucumber.filter.tags="@invalid-login"
+```
+
+Other negative-path tags include:
+
+- `@nonexistent-product`
+- `@nonexistent-order-retrieval`
+- `@nonexistent-order-cancellation`
+- `@insufficient-inventory`
 
 ## Services
 
@@ -47,6 +85,7 @@ By default, the tests expect the following services to be available:
 | Customer Service | `http://localhost:8081` |
 | Order Service | `http://localhost:8082` |
 | Product Service | `http://localhost:8083` |
+| Inventory Service | `http://localhost:8084` |
 | Authentication Service | `http://localhost:8085` |
 
 These defaults are defined in `E2eConfig`.
@@ -54,11 +93,7 @@ These defaults are defined in `E2eConfig`.
 Service URLs can be overridden using Maven system properties. For example:
 
 ```bash
-mvn clean test \
-  -Dcustomer.service.url=http://localhost:8081 \
-  -Dproduct.service.url=http://localhost:8083 \
-  -Dorder.service.url=http://localhost:8082 \
-  -Dauth.service.url=http://localhost:8085
+mvn clean test   -Dcustomer.service.url=http://localhost:8081   -Dproduct.service.url=http://localhost:8083   -Dorder.service.url=http://localhost:8082   -Dinventory.service.url=http://localhost:8084   -Dauth.service.url=http://localhost:8085
 ```
 
 This allows the tests to be run against different environments without changing the test source code.
@@ -72,6 +107,7 @@ src/test/
 ├── java/nz/fox/craig/e2e/
 │   ├── client/
 │   │   ├── AuthenticationClient.java
+│   │   ├── InventoryClient.java
 │   │   ├── OrderClient.java
 │   │   └── ProductClient.java
 │   │
@@ -90,11 +126,13 @@ src/test/
 │   │
 │   └── RunCucumberTest.java
 │
-└── resources/
-    └── features/
-        ├── authentication/
-        ├── orders/
-        └── products/
+├── resources/
+│   └── features/
+│       ├── authentication/
+│       ├── orders/
+│       └── products/
+│
+└── run-e2e.sh
 ```
 
 ### Step definitions
@@ -103,7 +141,7 @@ Step definition classes contain the behaviour used by the Cucumber scenarios.
 
 - `AuthenticationSteps` handles registration and login scenarios.
 - `ProductSteps` handles product browsing and product details.
-- `OrderSteps` handles order placement, retrieval and cancellation.
+- `OrderSteps` handles order placement, retrieval and cancellation, including inventory-related scenarios.
 
 ### Clients
 
@@ -111,6 +149,7 @@ The client classes contain the HTTP communication with the application services.
 
 - `AuthenticationClient`
 - `ProductClient`
+- `InventoryClient`
 - `OrderClient`
 
 This keeps HTTP request construction separate from the Cucumber step definitions.
@@ -131,20 +170,35 @@ Each scenario maintains its own state.
 ### Authentication
 
 - Customer registration
-- Customer login
+- Successful customer login
+- Rejected login with invalid credentials
 
 ### Products
 
 - Browse available products
 - View product details
+- Reject requests for nonexistent products
 
 ### Orders
 
 - Place an order
+- Reject orders when inventory is insufficient
 - Retrieve an order
+- Reject requests for nonexistent orders
 - Cancel an order
+- Reject cancellation of nonexistent orders
 
-The scenarios currently focus on the primary successful user journeys through the application.
+The scenarios focus on the primary successful user journeys and significant negative business behaviours through the application.
+
+## Test environment
+
+The E2E tests run against the application services and their supporting databases.
+
+The application environment uses Docker Compose. Each microservice uses Flyway to initialise and seed its database.
+
+The E2E test project does not maintain a separate test database. It runs against the application environment configured for E2E testing.
+
+The `run-e2e.sh` script is the preferred way to run the complete suite because it starts the required environment, waits for the services to become available, and then executes the tests.
 
 ## Test output
 
@@ -160,30 +214,21 @@ produces readable Cucumber output showing each scenario and its individual steps
 
 ### Tests return connection errors
 
-Make sure the API project is running:
+Use the E2E script from the root of this project:
 
 ```bash
-cd pc-parts-store-api
-docker compose up -d --build
+./run-e2e.sh
 ```
 
-You can check the running containers with:
+If running Maven directly, make sure all required application services are already running and available on their configured ports.
+
+Health endpoints are available for the application services and can be used to check whether a service is ready. For example:
 
 ```bash
-docker compose ps
+curl http://localhost:8081/actuator/health
 ```
 
-Application logs can be viewed with:
-
-```bash
-docker compose logs
-```
-
-or for a specific service:
-
-```bash
-docker compose logs product-service
-```
+Check the service URLs listed above if a connection fails.
 
 ### Tests fail with authentication errors
 
@@ -191,14 +236,29 @@ Make sure the authentication service is running and that the customer and authen
 
 ### Tests fail because a product is unavailable
 
-The order scenarios select a product with available stock from the product service. Ensure the product database has been seeded and that at least one product has stock available.
+The order scenarios use a designated E2E product. Ensure the product database has been seeded and that the E2E product has available inventory.
+
+The insufficient-inventory scenario queries the current inventory and requests more units than are available, so it does not intentionally consume inventory.
+
+If individual scenarios are run repeatedly against a persistent environment, successful order scenarios can change inventory state. Running the complete E2E script provides the intended controlled test environment.
+
+### The smoke suite passes but the full suite fails
+
+Run the complete suite using:
+
+```bash
+./run-e2e.sh
+```
+
+The smoke suite only covers the critical application path. The full suite additionally exercises negative scenarios and other order behaviours.
 
 ## Technology
 
-- Java
+- Java 21
 - Maven
 - Cucumber
 - JUnit 5
 - Java HTTP Client
 - Jackson
 - Docker Compose
+- Spring Boot application services
