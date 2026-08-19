@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,7 @@ public class ProductSteps {
 
     private final ProductClient productClient;
     private final ScenarioState state;
+    private HttpResponse<String> productNotFoundResponse;
 
     public ProductSteps(
             ProductClient productClient,
@@ -102,5 +104,19 @@ public class ProductSteps {
         assertEquals(state.getSelectedProduct().stockQuantity(), product.stockQuantity());
         assertEquals(state.getSelectedProduct().weightKg(), product.weightKg());
         assertEquals(state.getSelectedProduct().imageUrl(), product.imageUrl());
+    }
+
+    @When("I request the details of a nonexistent product")
+    public void iRequestTheDetailsOfANonexistentProduct() throws Exception {
+
+        UUID productId = UUID.randomUUID();
+
+        productNotFoundResponse =
+                productClient.getProduct(productId.toString());
+    }
+
+    @Then("the product should not be found")
+    public void theProductShouldNotBeFound() {
+        assertEquals(404, productNotFoundResponse.statusCode());
     }
 }
