@@ -24,4 +24,9 @@ public final class E2eConfig {
             System.getProperty(
                     "auth.service.url",
                     "http://localhost:8085");
+
+    public static final String INVENTORY_SERVICE_URL =
+        System.getProperty(
+                "auth.service.url",
+                "http://localhost:8084");
 }

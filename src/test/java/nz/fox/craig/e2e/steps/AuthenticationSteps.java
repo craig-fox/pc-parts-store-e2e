@@ -171,7 +171,7 @@ public class AuthenticationSteps {
         password = "password123";
     
         CustomerResponse customer =
-                registerCustomer(email, password, "Test");
+                registerCustomer(email, password, "Login", "Test");
     
         LoginResponse login =
                 authenticationClient.loginCustomer(
@@ -188,15 +188,30 @@ public class AuthenticationSteps {
         state.setAuthToken(login.token());
     }
 
+    @When("I log in with invalid credentials")
+    public void iLogInWithInvalidCredentials() throws Exception {
+        loginResponse =
+                authenticationClient.login(
+                        email,
+                        password + "-invalid");
+    }
+
+    @Then("my login should be rejected")
+    public void myLoginShouldBeRejected() {
+        assertEquals(401, loginResponse.statusCode());
+    }
+
     private CustomerResponse registerCustomer(
         String email,
         String password,
-        String preferredName) throws Exception {
+        String lastName,
+        String preferredName)
+        throws Exception {
 
         CustomerResponse customer =
                 authenticationClient.registerCustomer(
                         "E2E",
-                        "Order",
+                        lastName,
                         preferredName,
                         email,
                         "1 Test Street",
@@ -207,6 +222,6 @@ public class AuthenticationSteps {
         state.setCustomerId(customer.id());
 
         return customer;
-    }
+        }
 
 }
