@@ -72,7 +72,6 @@ mvn clean test -Dcucumber.filter.tags="@invalid-login"
 Other negative-path tags include:
 
 - `@nonexistent-product`
-- `@nonexistent-order-retrieval`
 - `@nonexistent-order-cancellation`
 - `@insufficient-inventory`
 

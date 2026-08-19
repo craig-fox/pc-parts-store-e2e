@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-API_DIR="../pc-parts-store-api"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+API_DIR="$SCRIPT_DIR/../pc-parts-store-api"
 
 wait_for_service() {
     local name="$1"
@@ -59,3 +60,5 @@ echo "All services are ready."
 echo "Running Cucumber tests..."
 
 mvn test
+
+echo "E2E tests passed successfully."
