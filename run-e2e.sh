@@ -56,6 +56,20 @@ wait_for_service "order-service" "http://localhost:8082/actuator/health"
 wait_for_service "inventory-service" "http://localhost:8084/actuator/health"
 wait_for_service "authentication-service" "http://localhost:8085/actuator/health"
 
+echo "Container JWT configuration:"
+
+docker compose \
+    -f "$API_DIR/docker-compose.yml" \
+    -f "$API_DIR/docker-compose.e2e.yml" \
+    exec -T authentication-service \
+    sh -c 'echo "authentication-service JWT_SECRET length: ${#JWT_SECRET}"'
+
+docker compose \
+    -f "$API_DIR/docker-compose.yml" \
+    -f "$API_DIR/docker-compose.e2e.yml" \
+    exec -T order-service \
+    sh -c 'echo "order-service JWT_SECRET length: ${#JWT_SECRET}"'
+
 echo "All services are ready."
 echo "Running Cucumber tests..."
 
