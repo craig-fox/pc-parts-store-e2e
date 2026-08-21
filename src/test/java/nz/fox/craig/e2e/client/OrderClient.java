@@ -16,6 +16,7 @@ public class OrderClient {
 
     public HttpResponse<String> createOrder(
             String authToken,
+            String idempotencyKey,
             String productId,
             int quantity,
             String addressLine1,
@@ -57,6 +58,7 @@ public class OrderClient {
                         .header(
                                 "Authorization",
                                 "Bearer " + authToken)
+                        .header("Idempotency-Key", idempotencyKey)
                         .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                         .build();
 

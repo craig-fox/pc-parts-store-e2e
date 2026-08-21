@@ -190,6 +190,7 @@ public class OrderSteps {
         insufficientInventoryResponse =
                 orderClient.createOrder(
                         state.getAuthToken(),
+                        UUID.randomUUID().toString(),
                         state.getSelectedProduct().id().toString(),
                         quantity,
                         "1 Test Street",
@@ -210,6 +211,7 @@ public class OrderSteps {
 
         return orderClient.createOrder(
                 state.getAuthToken(),
+                UUID.randomUUID().toString(),
                 state.getSelectedProduct().id().toString(),
                 1,
                 "1 Test Street",
