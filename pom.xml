@@ -7,7 +7,7 @@
 
     <groupId>nz.fox.craig.e2e</groupId>
     <artifactId>pc-parts-store-e2e</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 
     <name>pc-parts-store-e2e</name>
     <description>End-to-end tests for the PC Parts Store</description>
