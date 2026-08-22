@@ -70,7 +70,7 @@ public class OrderSteps {
 
         assertNotNull(state.getOrderId());
 
-        assertEquals("PLACED", order.status());
+        assertEquals("PAID", order.status());
 
         assertOrderDetails(order);
     }
@@ -118,7 +118,7 @@ public class OrderSteps {
                         orderRetrievalResponse.body(),
                         OrderResponse.class);
 
-        assertEquals("PLACED", order.status());
+        assertEquals("PAID", order.status());
 
         assertOrderDetails(order);
     }

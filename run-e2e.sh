@@ -8,7 +8,7 @@ API_DIR="$SCRIPT_DIR/../pc-parts-store-api"
 wait_for_service() {
     local name="$1"
     local url="$2"
-    local max_attempts=30
+    local max_attempts=60
     local attempt=1
 
     echo "Waiting for $name..."
@@ -55,6 +55,7 @@ wait_for_service "product-service" "http://localhost:8083/actuator/health"
 wait_for_service "order-service" "http://localhost:8082/actuator/health"
 wait_for_service "inventory-service" "http://localhost:8084/actuator/health"
 wait_for_service "authentication-service" "http://localhost:8085/actuator/health"
+wait_for_service "payment-service" "http://localhost:8086/actuator/health"
 
 echo "Container JWT configuration:"
 
