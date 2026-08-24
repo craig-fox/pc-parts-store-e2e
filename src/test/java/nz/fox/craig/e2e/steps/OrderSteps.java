@@ -196,7 +196,8 @@ public class OrderSteps {
                         "1 Test Street",
                         "Auckland",
                         "1010",
-                        "New Zealand");
+                        "New Zealand",
+                "STANDARD");
     }
 
     @Then("the order should be rejected because of insufficient inventory")
@@ -217,7 +218,8 @@ public class OrderSteps {
                 "1 Test Street",
                 "Auckland",
                 "1010",
-                "New Zealand");
+                "New Zealand",
+        "STANDARD");
     }
 
     private void assertOrderDetails(OrderResponse order) {
