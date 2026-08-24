@@ -22,7 +22,8 @@ public class OrderClient {
             String addressLine1,
             String city,
             String postcode,
-            String country) throws Exception {
+            String country,
+            String shippingMethod) throws Exception {
 
         String requestBody =
                 """
@@ -38,7 +39,8 @@ public class OrderClient {
                         "city": "%s",
                         "postcode": "%s",
                         "country": "%s"
-                    }
+                    },
+                    "shippingMethod": "%s"
                 }
                 """
                 .formatted(
@@ -47,7 +49,8 @@ public class OrderClient {
                         addressLine1,
                         city,
                         postcode,
-                        country);
+                        country,
+                        shippingMethod);
 
         HttpRequest request =
                 HttpRequest.newBuilder()

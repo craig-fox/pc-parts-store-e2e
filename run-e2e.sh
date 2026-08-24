@@ -6,14 +6,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 API_DIR="$SCRIPT_DIR/../pc-parts-store-api"
 
 wait_for_service() {
+
     local name="$1"
     local url="$2"
-    local max_attempts=60
+    local max_attempts=180
     local attempt=1
 
     echo "Waiting for $name..."
 
     while ! curl --silent --fail "$url" > /dev/null; do
+
         if (( attempt >= max_attempts )); then
             echo "ERROR: $name did not become ready."
             return 1
@@ -56,6 +58,7 @@ wait_for_service "order-service" "http://localhost:8082/actuator/health"
 wait_for_service "inventory-service" "http://localhost:8084/actuator/health"
 wait_for_service "authentication-service" "http://localhost:8085/actuator/health"
 wait_for_service "payment-service" "http://localhost:8086/actuator/health"
+wait_for_service "shipping-service" "http://localhost:8087/actuator/health"
 
 echo "Container JWT configuration:"
 
