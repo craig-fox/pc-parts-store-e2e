@@ -18,6 +18,25 @@ wait_for_service() {
 
         if (( attempt >= max_attempts )); then
             echo "ERROR: $name did not become ready."
+
+            echo "=== $name container status ==="
+            (
+                cd "$API_DIR"
+                docker compose \
+                    -f docker-compose.yml \
+                    -f docker-compose.e2e.yml \
+                    ps "$name"
+            )
+
+            echo "=== $name logs ==="
+            (
+                cd "$API_DIR"
+                docker compose \
+                    -f docker-compose.yml \
+                    -f docker-compose.e2e.yml \
+                    logs --tail=200 "$name"
+            )
+
             return 1
         fi
 
