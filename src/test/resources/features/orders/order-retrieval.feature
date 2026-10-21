@@ -11,3 +11,9 @@ Feature: Order retrieval
     Given I am a registered and authenticated customer
     When I retrieve a nonexistent order
     Then my order should not be found
+
+  Scenario: A customer cannot retrieve another customer's order
+    Given I am a registered and authenticated customer
+    And another customer has placed an order
+    When I retrieve the other customer's order
+    Then my order should not be found
