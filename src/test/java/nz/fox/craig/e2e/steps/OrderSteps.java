@@ -39,6 +39,7 @@ public class OrderSteps {
     private UUID otherCustomerId;
     private final PaymentClient paymentClient;
     private BigDecimal expectedOrderTotal;
+    private int availableQuantityBeforeOrder;
 
     private HttpResponse<String> paymentsResponse;
     private HttpResponse<String> conflictingOrderResponse;
@@ -104,6 +105,11 @@ public class OrderSteps {
 
         state.setSelectedProduct(
                 productClient.getE2eProduct());
+        InventoryResponse inventory = inventoryClient.getInventory(
+                state.getAuthToken(),
+                state.getSelectedProduct().id().toString());
+        
+        availableQuantityBeforeOrder = inventory.availableQuantity();
 
         orderResponse = createOrder();
 
@@ -237,6 +243,15 @@ public class OrderSteps {
                         OrderResponse.class);
 
         assertEquals("CANCELLED", order.status());
+        InventoryResponse inventoryAfterCancellation =
+        inventoryClient.getInventory(
+                state.getAuthToken(),
+                state.getSelectedProduct().id().toString());
+
+        assertEquals(
+                availableQuantityBeforeOrder,
+                inventoryAfterCancellation.availableQuantity(),
+                "Available inventory should be restored after order cancellation");
 
         assertOrderDetails(order);
     }
