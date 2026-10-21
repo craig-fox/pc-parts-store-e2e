@@ -36,6 +36,7 @@ public class OrderSteps {
     private final AuthenticationClient authenticationClient;
     private String otherCustomerAuthToken;
     private UUID otherCustomerOrderId;
+    private UUID otherCustomerId;
     private final PaymentClient paymentClient;
     private BigDecimal expectedOrderTotal;
 
@@ -137,6 +138,8 @@ public class OrderSteps {
                         password);
 
         assertNotNull(customer.id());
+        otherCustomerId = customer.id();
+        assertNotNull(otherCustomerId);
 
         LoginResponse login =
                 authenticationClient.loginCustomer(email, password);
@@ -401,6 +404,43 @@ public class OrderSteps {
 
         assertEquals(otherCustomerOrderId, order.id());
         assertEquals("PAID", order.status());
+    }
+
+    @Given("another customer has completed a payment")
+    public void anotherCustomerHasCompletedAPayment() throws Exception {
+        anotherCustomerHasPlacedAnOrder();
+
+        HttpResponse<String> response =
+                paymentClient.getPaymentsByCustomer(
+                        otherCustomerAuthToken,
+                        otherCustomerId.toString());
+
+        assertEquals(200, response.statusCode(), response.body());
+
+        PaymentResponse[] payments =
+                objectMapper.readValue(
+                        response.body(),
+                        PaymentResponse[].class);
+
+        assertTrue(
+                java.util.Arrays.stream(payments)
+                        .anyMatch(payment ->
+                                payment.orderId().equals(otherCustomerOrderId)
+                                        && payment.customerId().equals(otherCustomerId)
+                                        && "COMPLETED".equals(payment.status())),
+                "Expected the other customer to have a completed payment");
+    }
+
+    @When("I retrieve the other customer's payments")
+    public void iRetrieveTheOtherCustomersPayments() throws Exception {
+        paymentsResponse = paymentClient.getPaymentsByCustomer(
+                state.getAuthToken(),
+                otherCustomerId.toString());
+    }
+
+    @Then("payment retrieval should be rejected")
+    public void paymentRetrievalShouldBeRejected() {
+        assertEquals(403, paymentsResponse.statusCode(), paymentsResponse.body());
     }
 
     private void assertOrderDetails(OrderResponse order) {
