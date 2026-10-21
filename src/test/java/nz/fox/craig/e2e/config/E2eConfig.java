@@ -29,4 +29,9 @@ public final class E2eConfig {
         System.getProperty(
                 "inventory.service.url",
                 "http://localhost:8084");
+
+    public static final String PAYMENT_SERVICE_URL =
+        System.getProperty(
+        "payment.service.url",
+        "http://localhost:8086");
 }
